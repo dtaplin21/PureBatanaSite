@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PURE BATANA | Premium Honduran Hair & Skin Oil</title>
+  <style>
+    :root {
+      --primary-color: #3a5a40;
+      --secondary-color: #a3b18a;
+      --accent-color: #588157;
+      --text-color: #344e41;
+      --light-color: #dad7cd;
+      --white: #ffffff;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+    
+    body {
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    /* Navigation */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--light-color);
+    }
+    
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 30px;
+    }
+    
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-color);
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    
+    .nav-links a:hover {
+      color: var(--accent-color);
+    }
+    
+    /* Hero Section */
+    .hero {
+      display: flex;
+      align-items: center;
+      min-height: 80vh;
+      padding: 60px 0;
+    }
+    
+    .hero-content {
+      flex: 1;
+      padding-right: 40px;
+    }
+    
+    .hero-image {
+      flex: 1;
+      text-align: center;
+    }
+    
+    .hero-image img {
+      max-width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: var(--primary-color);
+    }
+    
+    .subtitle {
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: var(--accent-color);
+      font-weight: 500;
+    }
+    
+    .description {
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    
+    .price {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+    
+    .cta-button {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: var(--white);
+      padding: 15px 40px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.3s;
+    }
+    
+    .cta-button:hover {
+      background-color: var(--accent-color);
+    }
+    
+    /* Benefits Section */
+    .benefits {
+      padding: 80px 0;
+      background-color: var(--light-color);
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 50px;
+      color: var(--primary-color);
+    }
+    
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+    
+    .benefit-card {
+      background-color: var(--white);
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .benefit-icon {
+      font-size: 40px;
+      color: var(--accent-color);
+      margin-bottom: 20px;
+    }
+    
+    .benefit-title {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+    
+    /* Story Section */
+    .story {
+      padding: 80px 0;
+    }
+    
+    .story-container {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+    }
+    
+    .story-image {
+      flex: 1;
+    }
+    
+    .story-image img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    
+    .story-content {
+      flex: 1;
+    }
+    
+    /* Testimonials */
+    .testimonials {
+      padding: 80px 0;
+      background-color: var(--light-color);
+    }
+    
+    .testimonial-card {
+      background-color: var(--white);
+      padding: 30px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .testimonial-text {
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+    
+    .testimonial-author {
+      font-weight: 600;
+    }
+    
+    /* How to Use */
+    .how-to-use {
+      padding: 80px 0;
+    }
+    
+    .usage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+    
+    .usage-card {
+      border: 1px solid var(--light-color);
+      border-radius: 10px;
+      padding: 30px;
+    }
+    
+    .usage-number {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--secondary-color);
+      margin-bottom: 15px;
+    }
+    
+    /* Footer */
+    footer {
+      background-color: var(--primary-color);
+      color: var(--white);
+      padding: 40px 0;
+    }
+    
+    .footer-container {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    
+    .footer-section {
+      flex: 1;
+      min-width: 200px;
+      margin-bottom: 20px;
+    }
+    
+    .footer-title {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    
+    .footer-links a {
+      display: block;
+      color: var(--light-color);
+      text-decoration: none;
+      margin-bottom: 10px;
+      transition: color 0.3s;
+    }
+    
+    .footer-links a:hover {
+      color: var(--white);
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .hero, .story-container {
+        flex-direction: column;
+      }
+      
+      .hero-content, .story-content {
+        padding-right: 0;
+        margin-bottom: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <div class="container">
+    <nav>
+      <div class="logo">PURE BATANA</div>
+      <div class="nav-links">
+        <a href="#benefits">Benefits</a>
+        <a href="#story">Our Story</a>
+        <a href="#how-to-use">How to Use</a>
+        <a href="#shop">Shop</a>
+      </div>
+    </nav>
+  </div>
+  
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Pure Batana Oil</h1>
+        <p class="subtitle">Ancient Honduran beauty secret for hair & skin</p>
+        <p class="description">Handcrafted by indigenous Miskito women in Honduras, our 100% pure, cold-pressed Batana Oil delivers transformative moisturizing and revitalizing benefits. This centuries-old beauty secret is now available to you in its purest form.</p>
+        <p class="price">$29.95 • 2 oz (60ml)</p>
+        <a href="#" class="cta-button">Shop Now</a>
+      </div>
+      <div class="hero-image">
+        <img src="/api/placeholder/400/500" alt="Batana Oil Bottle">
+      </div>
+    </div>
+  </section>
+  
+  <!-- Benefits Section -->
+  <section class="benefits" id="benefits">
+    <div class="container">
+      <h2 class="section-title">Benefits of Batana Oil</h2>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">💆</div>
+          <h3 class="benefit-title">Hair Revitalization</h3>
+          <p>Strengthens hair follicles, prevents breakage, and adds natural shine without weighing hair down.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">✨</div>
+          <h3 class="benefit-title">Skin Renewal</h3>
+          <p>Rich in omega-3, 6, and 9 fatty acids to deeply moisturize and improve skin elasticity.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">🌱</div>
+          <h3 class="benefit-title">100% Natural</h3>
+          <p>No additives, preservatives or chemicals. Just pure, cold-pressed oil from American palm fruit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Story Section -->
+  <section class="story" id="story">
+    <div class="container story-container">
+      <div class="story-image">
+        <img src="/api/placeholder/500/350" alt="Batana Oil Production">
+      </div>
+      <div class="story-content">
+        <h2 class="section-title">Our Story</h2>
+        <p>For centuries, the indigenous Miskito women of Honduras have harvested and processed American palm fruit to create Batana Oil, a natural beauty elixir revered for its remarkable properties.</p>
+        <p>Our founder discovered this treasure while traveling through the La Mosquitia region, where she witnessed its transformative effects firsthand. Partnering directly with Miskito communities, we ensure fair compensation and sustainable harvesting practices.</p>
+        <p>Each bottle of Pure Batana supports traditional knowledge, indigenous livelihoods, and rainforest conservation while delivering an authentic, potent beauty oil to your daily routine.</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Testimonials -->
+  <section class="testimonials">
+    <div class="container">
+      <h2 class="section-title">What Our Customers Say</h2>
+      <div class="testimonial-card">
+        <p class="testimonial-text">"After just two weeks of using Batana Oil on my dry, damaged hair, I noticed incredible improvement in texture and shine. It's become the only hair product I'll ever need."</p>
+        <p class="testimonial-author">- Sarah K.</p>
+      </div>
+      <div class="testimonial-card">
+        <p class="testimonial-text">"I've struggled with sensitive skin my entire life. Pure Batana is the first oil that moisturizes deeply without causing breakouts. It's truly miraculous."</p>
+        <p class="testimonial-author">- Michael T.</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- How to Use -->
+  <section class="how-to-use" id="how-to-use">
+    <div class="container">
+      <h2 class="section-title">How to Use Batana Oil</h2>
+      <div class="usage-grid">
+        <div class="usage-card">
+          <div class="usage-number">01</div>
+          <h3>For Hair</h3>
+          <p>Apply a small amount to palms and work through damp hair, focusing on ends. Can be used as a deep conditioning treatment by leaving on for 30 minutes before washing.</p>
+        </div>
+        <div class="usage-card">
+          <div class="usage-number">02</div>
+          <h3>For Face</h3>
+          <p>Warm 2-3 drops between fingertips and gently press into clean, slightly damp skin. Perfect as the final step in your evening skincare routine.</p>
+        </div>
+        <div class="usage-card">
+          <div class="usage-number">03</div>
+          <h3>For Body</h3>
+          <p>Massage a generous amount into skin after bathing while still damp. Focus on dry areas like elbows, knees, and heels.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Shop Section -->
+  <section class="benefits" id="shop">
+    <div class="container">
+      <h2 class="section-title">Shop Pure Batana</h2>
+      <div class="benefit-card" style="max-width: 600px; margin: 0 auto;">
+        <div class="hero-image" style="margin-bottom: 30px;">
+          <img src="/api/placeholder/300/300" alt="Batana Oil Product">
+        </div>
+        <h3 class="benefit-title">Pure Batana Oil</h3>
+        <p style="margin-bottom: 20px;">100% pure, cold-pressed batana oil in a protective amber glass bottle with precision dropper.</p>
+        <p class="price">$29.95 • 2 oz (60ml)</p>
+        <a href="#" class="cta-button">Add to Cart</a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-container">
+      <div class="footer-section">
+        <h4 class="footer-title">PURE BATANA</h4>
+        <p>Bringing the traditional beauty wisdom of Honduras to modern skincare routines.</p>
+      </div>
+      <div class="footer-section">
+        <h4 class="footer-title">Quick Links</h4>
+        <div class="footer-links">
+          <a href="#">Home</a>
+          <a href="#benefits">Benefits</a>
+          <a href="#story">Our Story</a>
+          <a href="#shop">Shop</a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4 class="footer-title">Customer Care</h4>
+        <div class="footer-links">
+          <a href="#">Shipping & Returns</a>
+          <a href="#">FAQ</a>
+          <a href="#">Contact Us</a>
+          <a href="#">Privacy Policy</a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4 class="footer-title">Connect</h4>
+        <div class="footer-links">
+          <a href="#">Instagram</a>
+          <a href="#">Facebook</a>
+          <a href="#">Pinterest</a>
+          <a href="#">Email Newsletter</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

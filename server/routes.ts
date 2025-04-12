@@ -13,6 +13,13 @@ import {
   insertContactMessageSchema 
 } from "@shared/schema";
 import { z } from "zod";
+import Stripe from "stripe";
+
+// Initialize Stripe with secret key
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - All prefixed with /api
@@ -323,6 +330,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(newMessage);
     } catch (error) {
       res.status(500).json({ message: "Error submitting contact form" });
+    }
+  });
+
+  // Stripe payments
+  app.post("/api/create-payment-intent", express.json(), async (req, res) => {
+    try {
+      const { amount, orderItems } = req.body;
+      
+      // Create a payment intent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          orderItems: JSON.stringify(orderItems)
+        }
+      });
+
+      // Send the client secret to the client
+      res.status(200).json({
+        clientSecret: paymentIntent.client_secret
+      });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ 
+        error: error.message 
+      });
+    }
+  });
+
+  // Webhook for payment completion
+  app.post("/api/webhook", express.raw({type: 'application/json'}), async (req, res) => {
+    try {
+      const sig = req.headers['stripe-signature'] as string;
+      
+      if (!process.env.STRIPE_WEBHOOK_SECRET) {
+        return res.status(400).send('Webhook secret is not set');
+      }
+
+      let event: Stripe.Event;
+      
+      try {
+        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+      } catch (err: any) {
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+      }
+      
+      // Handle the event
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        // Process the order here
+        console.log('Payment intent succeeded:', paymentIntent.id);
+      }
+      
+      res.json({received: true});
+    } catch (error: any) {
+      console.error('Webhook error:', error);
+      res.status(500).json({ error: error.message });
     }
   });
 

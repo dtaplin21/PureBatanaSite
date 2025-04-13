@@ -45,6 +45,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching product" });
     }
   });
+  
+  // Update product (for admin use)
+  app.patch("/api/products/:id", express.json(), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // We're only allowing price updates through this endpoint for security
+      const { price } = req.body;
+      
+      if (typeof price !== 'number' || price < 0) {
+        return res.status(400).json({ message: "Invalid price. Price must be a non-negative number." });
+      }
+      
+      const existingProduct = await storage.getProduct(id);
+      if (!existingProduct) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      // Update only the price
+      const updatedProduct = await storage.updateProduct(id, { price });
+      
+      if (!updatedProduct) {
+        return res.status(500).json({ message: "Failed to update product" });
+      }
+      
+      res.json(updatedProduct);
+    } catch (error) {
+      console.error("Error updating product:", error);
+      res.status(500).json({ message: "Error updating product" });
+    }
+  });
 
   // Cart Items
   app.get("/api/cart/:userId", async (req, res) => {

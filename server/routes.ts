@@ -336,9 +336,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid contact form data", errors: validation.error });
       }
       
+      // First save to the database
       const newMessage = await storage.createContactMessage(validation.data);
+      
+      // Then send email using SendGrid
+      const { sendEmail } = await import('./email');
+      
+      // Format the email content
+      const emailText = `
+Name: ${validation.data.name}
+Email: ${validation.data.email}
+Subject: ${validation.data.subject}
+Message: ${validation.data.message}
+      `;
+      
+      const emailHtml = `
+<h2>New Contact Form Submission</h2>
+<p><strong>Name:</strong> ${validation.data.name}</p>
+<p><strong>Email:</strong> ${validation.data.email}</p>
+<p><strong>Subject:</strong> ${validation.data.subject}</p>
+<p><strong>Message:</strong></p>
+<p>${validation.data.message.replace(/\n/g, '<br>')}</p>
+      `;
+      
+      // Send the email to Dtaplin21@gmail.com
+      await sendEmail({
+        to: 'Dtaplin21@gmail.com',
+        from: 'contact@purebatana.com', // This must be a verified sender in your SendGrid account
+        subject: `Pure Batana Contact: ${validation.data.subject}`,
+        text: emailText,
+        html: emailHtml
+      });
+      
       res.status(201).json(newMessage);
     } catch (error) {
+      console.error('Contact form error:', error);
       res.status(500).json({ message: "Error submitting contact form" });
     }
   });

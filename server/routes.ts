@@ -263,6 +263,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Clear user's cart
       await storage.clearCart(orderData.data.userId);
       
+      // Send order confirmation email
+      try {
+        const { sendOrderConfirmationEmail } = await import('./email');
+        
+        // Get product details for each order item
+        const orderItemsWithDetails = await Promise.all(
+          orderItems.map(async (item) => {
+            const product = await storage.getProduct(item.productId);
+            return {
+              name: product?.name || `Product #${item.productId}`,
+              quantity: item.quantity,
+              price: item.price
+            };
+          })
+        );
+        
+        // Calculate totals
+        const subtotal = orderItemsWithDetails.reduce((sum, item) => 
+          sum + (item.price * item.quantity), 0);
+        const shipping = subtotal >= 50 ? 0 : 5.95;
+        const total = subtotal + shipping;
+        
+        // Generate a formatted order number
+        const orderNumber = `PB${newOrder.id.toString().padStart(5, '0')}`;
+        
+        // Send the confirmation email
+        await sendOrderConfirmationEmail({
+          orderNumber,
+          customerName: orderData.data.name,
+          customerEmail: orderData.data.email,
+          items: orderItemsWithDetails,
+          subtotal,
+          shipping,
+          total,
+          shippingAddress: orderData.data.shippingAddress,
+          dateCreated: newOrder.createdAt
+        });
+        
+      } catch (emailError) {
+        // Log the error but don't fail the order creation
+        console.error('Error sending order confirmation email:', emailError);
+      }
+      
       res.status(201).json({
         ...newOrder,
         items: orderItems
@@ -422,8 +465,67 @@ Message: ${validation.data.message}
       // Handle the event
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        // Process the order here
         console.log('Payment intent succeeded:', paymentIntent.id);
+        
+        // If we have order metadata, we can send a confirmation email here as well
+        if (paymentIntent.receipt_email) {
+          try {
+            // Look for an order that matches this payment (based on amount, etc.)
+            // In a real implementation, we would have a more reliable way to match orders to payments
+            const orders = await storage.getOrders();
+            const matchingOrder = orders.find(order => 
+              Math.round(order.total * 100) === paymentIntent.amount &&
+              order.status === 'pending'
+            );
+            
+            if (matchingOrder) {
+              // Update order status to 'paid'
+              await storage.updateOrderStatus(matchingOrder.id, 'paid');
+              
+              // Send order confirmation email if we have customer details
+              if (matchingOrder.email && matchingOrder.name) {
+                const { sendOrderConfirmationEmail } = await import('./email');
+                const orderItems = await storage.getOrderItems(matchingOrder.id);
+                
+                // Get product details for each order item
+                const orderItemsWithDetails = await Promise.all(
+                  orderItems.map(async (item) => {
+                    const product = await storage.getProduct(item.productId);
+                    return {
+                      name: product?.name || `Product #${item.productId}`,
+                      quantity: item.quantity,
+                      price: item.price
+                    };
+                  })
+                );
+                
+                // Calculate totals
+                const subtotal = orderItemsWithDetails.reduce((sum, item) => 
+                  sum + (item.price * item.quantity), 0);
+                const shipping = subtotal >= 50 ? 0 : 5.95;
+                const total = subtotal + shipping;
+                
+                // Generate a formatted order number
+                const orderNumber = `PB${matchingOrder.id.toString().padStart(5, '0')}`;
+                
+                // Send the confirmation email
+                await sendOrderConfirmationEmail({
+                  orderNumber,
+                  customerName: matchingOrder.name,
+                  customerEmail: matchingOrder.email,
+                  items: orderItemsWithDetails,
+                  subtotal,
+                  shipping,
+                  total,
+                  shippingAddress: matchingOrder.shippingAddress,
+                  dateCreated: matchingOrder.createdAt
+                });
+              }
+            }
+          } catch (emailError) {
+            console.error('Error sending confirmation email from webhook:', emailError);
+          }
+        }
       }
       
       res.json({received: true});

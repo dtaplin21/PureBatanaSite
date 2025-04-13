@@ -21,8 +21,16 @@ export default function CheckoutSuccessPage() {
         <h1 className="font-display font-bold text-2xl text-[#3a5a40] mb-4">Order Confirmed!</h1>
         <p className="text-neutral-600 mb-6">
           Thank you for your purchase. We've received your order and will process it right away.
-          You will receive a confirmation email shortly.
+          A detailed receipt has been sent to your email address with your order number and complete purchase information.
         </p>
+        <div className="bg-[#f1f8e9] p-4 rounded-lg mb-6 text-left">
+          <h3 className="font-medium text-[#3a5a40] mb-2">What's Next?</h3>
+          <ul className="list-disc pl-5 text-sm space-y-1 text-neutral-700">
+            <li>Check your email for your order confirmation</li>
+            <li>Your order will be shipped within 1-2 business days</li>
+            <li>You'll receive tracking information once your order ships</li>
+          </ul>
+        </div>
         <div className="space-y-4">
           <Link href="/orders">
             <Button variant="outline" className="w-full">

@@ -273,6 +273,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reviews
+  app.get("/api/reviews", async (req, res) => {
+    try {
+      // Get all reviews (will add pagination in a real app)
+      const allReviews = await storage.getAllReviews();
+      res.json(allReviews);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching reviews" });
+    }
+  });
+
   app.get("/api/reviews/product/:productId", async (req, res) => {
     try {
       const productId = parseInt(req.params.productId);

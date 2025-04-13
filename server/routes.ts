@@ -362,10 +362,11 @@ Message: ${validation.data.message}
       // Send the email to Dtaplin21@gmail.com
       await sendEmail({
         to: 'Dtaplin21@gmail.com',
-        from: 'contact@purebatana.com', // This must be a verified sender in your SendGrid account
+        from: 'noreply@replit.com', // Using Replit's domain which should be pre-verified
         subject: `Pure Batana Contact: ${validation.data.subject}`,
         text: emailText,
-        html: emailHtml
+        html: emailHtml,
+        replyTo: validation.data.email // Set reply-to as the submitter's email
       });
       
       res.status(201).json(newMessage);

@@ -9,8 +9,13 @@ export default function CheckoutSuccessPage() {
   
   // Clear the cart when the success page loads
   useEffect(() => {
-    clearCart();
-  }, [clearCart]);
+    // Only clear the cart once when the component mounts
+    const clearCartOnce = () => {
+      clearCart();
+    };
+    clearCartOnce();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   return (
     <div className="container mx-auto px-4 py-16 text-center">

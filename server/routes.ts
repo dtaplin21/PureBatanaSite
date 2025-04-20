@@ -28,8 +28,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products", async (req, res) => {
     try {
       const products = await storage.getProducts();
-      res.json(products);
+      
+      // Enhance products with review counts
+      const productsWithReviews = await Promise.all(
+        products.map(async (product) => {
+          const reviews = await storage.getProductReviews(product.id);
+          return {
+            ...product,
+            reviewCount: reviews.length
+          };
+        })
+      );
+      
+      res.json(productsWithReviews);
     } catch (error) {
+      console.error("Error fetching products:", error);
       res.status(500).json({ message: "Error fetching products" });
     }
   });
@@ -40,8 +53,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
-      res.json(product);
+      
+      // Increment the view count
+      await storage.incrementProductViewCount(product.id);
+      
+      // Get the updated product with incremented view count
+      const updatedProduct = await storage.getProduct(product.id);
+      
+      // Get the review count for this product
+      const reviews = await storage.getProductReviews(product.id);
+      
+      // Return product with additional metadata
+      res.json({
+        ...updatedProduct,
+        reviewCount: reviews.length
+      });
     } catch (error) {
+      console.error("Error fetching product:", error);
       res.status(500).json({ message: "Error fetching product" });
     }
   });

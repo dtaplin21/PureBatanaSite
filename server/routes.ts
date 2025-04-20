@@ -356,8 +356,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           subtotal,
           shipping,
           total,
-          shippingAddress: orderData.data.shippingAddress,
-          dateCreated: newOrder.createdAt
+          shippingAddress: orderData.data.shippingAddress || "",
+          dateCreated: newOrder.createdAt || new Date()
         });
         
       } catch (emailError) {
@@ -576,8 +576,8 @@ Message: ${validation.data.message}
                   subtotal,
                   shipping,
                   total,
-                  shippingAddress: matchingOrder.shippingAddress,
-                  dateCreated: matchingOrder.createdAt
+                  shippingAddress: matchingOrder.shippingAddress || "",
+                  dateCreated: matchingOrder.createdAt || new Date()
                 });
               }
             }

@@ -1,53 +1,79 @@
-import { useEffect } from "react";
-import { Link } from "wouter";
+import { useEffect } from 'react';
+import { useLocation } from 'wouter';
+import { useStripe } from '@stripe/react-stripe-js';
+import { useCart } from '../context/CartContext';
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { Link } from 'wouter';
 
 export default function CheckoutSuccessPage() {
+  const stripe = useStripe();
+  const [location] = useLocation();
   const { clearCart } = useCart();
   
-  // Clear the cart when the success page loads
   useEffect(() => {
-    // Only clear the cart once when the component mounts
-    const clearCartOnce = () => {
-      clearCart();
-    };
-    clearCartOnce();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  
+    // Clear the cart after a successful checkout
+    clearCart();
+    
+    // Check the status of the payment if coming from the embedded checkout
+    if (!stripe) {
+      return;
+    }
+
+    const clientSecret = new URLSearchParams(window.location.search).get(
+      'payment_intent_client_secret'
+    );
+
+    if (clientSecret) {
+      stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
+        if (paymentIntent) {
+          // We can show different messages based on the payment status
+          switch (paymentIntent.status) {
+            case "succeeded":
+              console.log('Payment succeeded!');
+              break;
+            case "processing":
+              console.log('Your payment is processing.');
+              break;
+            case "requires_payment_method":
+              console.log('Your payment was not successful, please try again.');
+              break;
+            default:
+              console.log('Something went wrong.');
+              break;
+          }
+        }
+      });
+    }
+  }, [stripe, location, clearCart]);
+
   return (
-    <div className="container mx-auto px-4 py-16 text-center">
-      <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-sm border border-neutral-100">
-        <div className="flex justify-center">
-          <CheckCircle className="text-[#3a5a40] w-16 h-16 mb-4" />
+    <div className="container mx-auto py-16 px-4">
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-neutral-100 text-center">
+        <div className="rounded-full w-20 h-20 bg-green-100 mx-auto mb-6 flex items-center justify-center">
+          <i className="fas fa-check text-3xl text-green-600"></i>
         </div>
-        <h1 className="font-display font-bold text-2xl text-[#3a5a40] mb-4">Order Confirmed!</h1>
-        <p className="text-neutral-600 mb-6">
-          Thank you for your purchase. We've received your order and will process it right away.
-          A detailed receipt has been sent to your email address with your order number and complete purchase information.
+        
+        <h1 className="text-3xl font-display font-bold mb-4">Thank You For Your Order!</h1>
+        
+        <p className="text-lg text-neutral-600 mb-6">
+          Your payment has been successfully processed. You should receive an email confirmation shortly.
         </p>
-        <div className="bg-[#f1f8e9] p-4 rounded-lg mb-6 text-left">
-          <h3 className="font-medium text-[#3a5a40] mb-2">What's Next?</h3>
-          <ul className="list-disc pl-5 text-sm space-y-1 text-neutral-700">
-            <li>Check your email for your order confirmation</li>
-            <li>Your order will be shipped within 1-2 business days</li>
-            <li>You'll receive tracking information once your order ships</li>
-          </ul>
+        
+        <div className="p-4 bg-[#f8f7f4] rounded-lg mb-8">
+          <h3 className="font-medium mb-2">What Happens Next?</h3>
+          <p className="text-neutral-600 mb-2">
+            1. Your order will be processed within 1-2 business days.
+          </p>
+          <p className="text-neutral-600">
+            2. You'll receive shipping confirmation once your order is on its way.
+          </p>
         </div>
-        <div className="space-y-4">
-          <Link href="/orders">
-            <Button variant="outline" className="w-full">
-              View Your Orders
-            </Button>
-          </Link>
-          <Link href="/">
-            <Button className="w-full bg-[#3a5a40] hover:bg-[#588157]">
-              Continue Shopping
-            </Button>
-          </Link>
-        </div>
+        
+        <Link href="/">
+          <Button className="bg-[#3a5a40] hover:bg-[#588157]">
+            Return to Homepage
+          </Button>
+        </Link>
       </div>
     </div>
   );

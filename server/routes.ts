@@ -481,14 +481,16 @@ Message: ${validation.data.message}
   // Stripe payments
   app.post("/api/create-payment-intent", express.json(), async (req, res) => {
     try {
-      const { amount, orderItems } = req.body;
+      const { amount, orderItems, quantity = 1 } = req.body;
       
       // Create a payment intent with the order amount and currency
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "usd",
+        description: "Pure Batana Oil",
         metadata: {
-          orderItems: JSON.stringify(orderItems)
+          orderItems: JSON.stringify(orderItems),
+          quantity: quantity.toString()
         }
       });
 
@@ -591,6 +593,59 @@ Message: ${validation.data.message}
     } catch (error: any) {
       console.error('Webhook error:', error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin API - Get Stripe Orders
+  app.get("/api/stripe/orders", async (req, res) => {
+    try {
+      // Fetch payment intents from Stripe
+      const paymentIntents = await stripe.paymentIntents.list({
+        limit: 100, // Get the last 100 payments
+        expand: ['data.customer'] // Include customer info
+      });
+
+      // Transform payment intents into more user-friendly order objects
+      const orders = paymentIntents.data.map(pi => {
+        // Extract useful metadata from the payment intent
+        let items = [];
+        let description = pi.description || "Pure Batana Oil";
+        let quantity = 1;
+        
+        // Parse quantity from metadata if available
+        if (pi.metadata && pi.metadata.quantity) {
+          quantity = parseInt(pi.metadata.quantity) || 1;
+        }
+        
+        // Create a standardized item object
+        items.push({
+          description,
+          quantity,
+          amount: pi.amount / quantity // Divide by quantity to get per-item price
+        });
+        
+        return {
+          id: pi.id,
+          created: pi.created,
+          amount: pi.amount,
+          currency: pi.currency,
+          status: pi.status,
+          customer: {
+            id: pi.customer?.id || 'anonymous',
+            email: pi.customer?.email || pi.receipt_email || 'No email',
+            name: pi.customer?.name || 'Anonymous',
+            phone: pi.customer?.phone || null,
+            address: pi.customer?.address || null
+          },
+          shipping: pi.shipping,
+          items: items
+        };
+      });
+
+      res.json({ orders });
+    } catch (error) {
+      console.error('Error fetching Stripe orders:', error);
+      res.status(500).json({ message: "Error fetching Stripe orders" });
     }
   });
 

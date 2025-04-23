@@ -587,14 +587,13 @@ Message: ${validation.data.message}
           // Send order notification to admin (your email)
           await sendAdminOrderNotification(orderData);
           
-          // Send SMS notification
+          // Send SMS notification via email-to-SMS gateway
           try {
-            const { sendNewOrderSms } = await import('./sms');
-            await sendNewOrderSms(
+            const { sendSaleNotificationSms } = await import('./notification');
+            await sendSaleNotificationSms(
               orderNumber,
               customerName,
-              total,
-              '+12133379858' // Replace with your phone number
+              total
             );
           } catch (smsError) {
             console.error('Error sending SMS notification:', smsError);
@@ -627,6 +626,30 @@ Message: ${validation.data.message}
     }
   });
 
+  // API - Update SMS notification settings
+  app.post("/api/notifications/sms-settings", express.json(), async (req, res) => {
+    try {
+      const { phoneNumber, carrier } = req.body;
+      
+      if (!phoneNumber || !carrier) {
+        return res.status(400).json({ 
+          message: "Phone number and carrier are required" 
+        });
+      }
+      
+      const { updateSmsSettings } = await import('./notification');
+      updateSmsSettings(phoneNumber, carrier);
+      
+      res.json({ 
+        success: true, 
+        message: "SMS notification settings updated" 
+      });
+    } catch (error) {
+      console.error('Error updating SMS settings:', error);
+      res.status(500).json({ message: "Error updating SMS settings" });
+    }
+  });
+
   // Admin API - Get Stripe Orders
   app.get("/api/stripe/orders", async (req, res) => {
     try {
@@ -656,7 +679,13 @@ Message: ${validation.data.message}
         });
         
         // Extract customer information safely
-        const customerInfo = {
+        const customerInfo: {
+          id: string;
+          email: string;
+          name: string;
+          phone: string | null;
+          address: any;
+        } = {
           id: 'anonymous',
           email: pi.receipt_email || 'No email',
           name: 'Anonymous',

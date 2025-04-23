@@ -528,11 +528,80 @@ Message: ${validation.data.message}
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('Payment intent succeeded:', paymentIntent.id);
         
-        // If we have order metadata, we can send a confirmation email here as well
-        if (paymentIntent.receipt_email) {
+        try {
+          // Extract customer information from payment intent
+          const customerEmail = paymentIntent.receipt_email || '';
+          const customerName = paymentIntent.shipping?.name || 'Customer';
+          const shippingAddress = paymentIntent.shipping?.address ? 
+            `${paymentIntent.shipping.address.line1}, 
+             ${paymentIntent.shipping.address.line2 || ''} 
+             ${paymentIntent.shipping.address.city}, 
+             ${paymentIntent.shipping.address.state} 
+             ${paymentIntent.shipping.address.postal_code}, 
+             ${paymentIntent.shipping.address.country}`.replace(/\s+/g, ' ').trim() : 
+            'No address provided';
+          
+          // Extract order items from metadata
+          let orderItems = [];
+          let quantity = 1; // Default quantity
+          
+          if (paymentIntent.metadata && paymentIntent.metadata.quantity) {
+            quantity = parseInt(paymentIntent.metadata.quantity) || 1;
+          }
+          
+          // Create a standardized order item
+          orderItems.push({
+            name: "Pure Batana Oil",
+            quantity: quantity,
+            price: paymentIntent.amount / 100 / quantity // Convert from cents and divide by quantity
+          });
+          
+          // Calculate order totals
+          const subtotal = orderItems.reduce((sum, item) => 
+            sum + (item.price * item.quantity), 0);
+          const shipping = subtotal >= 50 ? 0 : 5.95;
+          const total = paymentIntent.amount / 100; // Convert from cents
+          
+          // Generate a formatted order number
+          const orderNumber = `PB${paymentIntent.id.substring(3, 9).toUpperCase()}`;
+          
+          // Create order data object
+          const orderData = {
+            orderNumber,
+            customerName,
+            customerEmail,
+            items: orderItems,
+            subtotal,
+            shipping,
+            total,
+            shippingAddress,
+            dateCreated: new Date(paymentIntent.created * 1000) // Convert Unix timestamp to Date
+          };
+          
+          // Send order confirmation email to customer
+          const { sendOrderConfirmationEmail, sendAdminOrderNotification } = await import('./email');
+          if (customerEmail) {
+            await sendOrderConfirmationEmail(orderData);
+          }
+          
+          // Send order notification to admin (your email)
+          await sendAdminOrderNotification(orderData);
+          
+          // Send SMS notification
           try {
-            // Look for an order that matches this payment (based on amount, etc.)
-            // In a real implementation, we would have a more reliable way to match orders to payments
+            const { sendNewOrderSms } = await import('./sms');
+            await sendNewOrderSms(
+              orderNumber,
+              customerName,
+              total,
+              '+12133379858' // Replace with your phone number
+            );
+          } catch (smsError) {
+            console.error('Error sending SMS notification:', smsError);
+          }
+          
+          // If we have order data in our system, update it
+          try {
             const orders = await storage.getOrders();
             const matchingOrder = orders.find(order => 
               Math.round(order.total * 100) === paymentIntent.amount &&
@@ -542,50 +611,12 @@ Message: ${validation.data.message}
             if (matchingOrder) {
               // Update order status to 'paid'
               await storage.updateOrderStatus(matchingOrder.id, 'paid');
-              
-              // Send order confirmation email if we have customer details
-              if (matchingOrder.email && matchingOrder.name) {
-                const { sendOrderConfirmationEmail } = await import('./email');
-                const orderItems = await storage.getOrderItems(matchingOrder.id);
-                
-                // Get product details for each order item
-                const orderItemsWithDetails = await Promise.all(
-                  orderItems.map(async (item) => {
-                    const product = await storage.getProduct(item.productId);
-                    return {
-                      name: product?.name || `Product #${item.productId}`,
-                      quantity: item.quantity,
-                      price: item.price
-                    };
-                  })
-                );
-                
-                // Calculate totals
-                const subtotal = orderItemsWithDetails.reduce((sum, item) => 
-                  sum + (item.price * item.quantity), 0);
-                const shipping = subtotal >= 50 ? 0 : 5.95;
-                const total = subtotal + shipping;
-                
-                // Generate a formatted order number
-                const orderNumber = `PB${matchingOrder.id.toString().padStart(5, '0')}`;
-                
-                // Send the confirmation email
-                await sendOrderConfirmationEmail({
-                  orderNumber,
-                  customerName: matchingOrder.name,
-                  customerEmail: matchingOrder.email,
-                  items: orderItemsWithDetails,
-                  subtotal,
-                  shipping,
-                  total,
-                  shippingAddress: matchingOrder.shippingAddress || "",
-                  dateCreated: matchingOrder.createdAt || new Date()
-                });
-              }
             }
-          } catch (emailError) {
-            console.error('Error sending confirmation email from webhook:', emailError);
+          } catch (storageError) {
+            console.error('Error updating order in storage:', storageError);
           }
+        } catch (error) {
+          console.error('Error processing payment success:', error);
         }
       }
       
@@ -624,19 +655,47 @@ Message: ${validation.data.message}
           amount: pi.amount / quantity // Divide by quantity to get per-item price
         });
         
+        // Extract customer information safely
+        const customerInfo = {
+          id: 'anonymous',
+          email: pi.receipt_email || 'No email',
+          name: 'Anonymous',
+          phone: null,
+          address: null
+        };
+        
+        // If customer object exists and is not a string, extract properties
+        if (pi.customer && typeof pi.customer === 'object') {
+          // Check if it's a Customer (not deleted) by seeing if it has an id property
+          if ('id' in pi.customer) {
+            customerInfo.id = pi.customer.id || customerInfo.id;
+            
+            // Check if other properties exist (handle both Customer and possible DeletedCustomer)
+            if ('email' in pi.customer && pi.customer.email) {
+              customerInfo.email = pi.customer.email;
+            }
+            
+            if ('name' in pi.customer && pi.customer.name) {
+              customerInfo.name = pi.customer.name;
+            }
+            
+            if ('phone' in pi.customer && pi.customer.phone) {
+              customerInfo.phone = pi.customer.phone;
+            }
+            
+            if ('address' in pi.customer && pi.customer.address) {
+              customerInfo.address = pi.customer.address;
+            }
+          }
+        }
+        
         return {
           id: pi.id,
           created: pi.created,
           amount: pi.amount,
           currency: pi.currency,
           status: pi.status,
-          customer: {
-            id: pi.customer?.id || 'anonymous',
-            email: pi.customer?.email || pi.receipt_email || 'No email',
-            name: pi.customer?.name || 'Anonymous',
-            phone: pi.customer?.phone || null,
-            address: pi.customer?.address || null
-          },
+          customer: customerInfo,
           shipping: pi.shipping,
           items: items
         };

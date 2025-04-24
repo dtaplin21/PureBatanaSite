@@ -626,6 +626,38 @@ Message: ${validation.data.message}
     }
   });
 
+  // API - Test SMS notifications
+  app.post("/api/notifications/test-sms", express.json(), async (req, res) => {
+    try {
+      const { sendSaleNotificationSms } = await import('./notification');
+      
+      // Send a test SMS
+      const success = await sendSaleNotificationSms(
+        "TEST123", 
+        "Test Customer", 
+        29.99
+      );
+      
+      if (success) {
+        res.json({ 
+          success: true, 
+          message: "Test SMS notification sent successfully!" 
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: "Failed to send test SMS notification" 
+        });
+      }
+    } catch (error) {
+      console.error('Error sending test SMS notification:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Error sending test SMS notification" 
+      });
+    }
+  });
+
   // API - Update SMS notification settings
   app.post("/api/notifications/sms-settings", express.json(), async (req, res) => {
     try {

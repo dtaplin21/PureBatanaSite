@@ -191,19 +191,7 @@ export default function EmbeddedCheckoutPage() {
               </Elements>
             )}
 
-            <div className="mt-4">
-              <p className="text-sm text-center text-neutral-500 mb-4">- OR -</p>
-              <a 
-                href={`https://buy.stripe.com/bIYaH15It3iq2yI6oo?items[0][quantity]=${totalQuantity}&adjust_quantity[pure_batana]=total&quantity=${totalQuantity}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full"
-              >
-                <Button className="w-full bg-[#666] hover:bg-[#888] text-lg h-12">
-                  <i className="fas fa-external-link-alt mr-2"></i> Pay with Stripe Checkout
-                </Button>
-              </a>
-            </div>
+            {/* External checkout option removed */}
           </div>
         </div>
       </div>

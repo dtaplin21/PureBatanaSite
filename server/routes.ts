@@ -478,6 +478,30 @@ Message: ${validation.data.message}
     }
   });
 
+  // Test SMS notification (for admin use only)
+  app.get("/api/test-sms-notification", async (req, res) => {
+    try {
+      // Import the notification function
+      const { sendSaleNotificationSms } = await import('./notification');
+      
+      // Send a test SMS
+      const success = await sendSaleNotificationSms(
+        'TEST-ORDER',
+        'Test Customer',
+        99.99
+      );
+      
+      if (success) {
+        res.json({ message: "Test SMS notification sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send test SMS notification" });
+      }
+    } catch (error) {
+      console.error('Error sending test SMS:', error);
+      res.status(500).json({ message: "Error sending test SMS" });
+    }
+  });
+
   // Stripe payments
   app.post("/api/create-payment-intent", express.json(), async (req, res) => {
     try {

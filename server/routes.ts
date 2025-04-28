@@ -461,9 +461,9 @@ Message: ${validation.data.message}
 <p>${validation.data.message.replace(/\n/g, '<br>')}</p>
       `;
       
-      // Send the email to dtaplin21@aol.com
+      // Send the email to dtaplin21@gmail.com
       await sendEmail({
-        to: 'dtaplin21@aol.com',
+        to: 'dtaplin21@gmail.com',
         from: 'noreply@replit.com', // Using Replit's domain which should be pre-verified
         subject: `Pure Batana Contact: ${validation.data.subject}`,
         text: emailText,

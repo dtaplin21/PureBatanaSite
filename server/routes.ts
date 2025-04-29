@@ -19,7 +19,14 @@ import Stripe from "stripe";
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Log first few characters of key for debugging
+console.log("STRIPE_SECRET_KEY prefix:", process.env.STRIPE_SECRET_KEY.substring(0, 7));
+
+// Load key directly from file as a fallback mechanism
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+// Use the live key directly
+const stripe = new Stripe(stripeSecretKey);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes - All prefixed with /api

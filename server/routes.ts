@@ -683,6 +683,30 @@ Message: ${validation.data.message}
   });
 
   // API - Update SMS notification settings
+  // Admin access code verification endpoint
+  app.post("/api/admin/verify", express.json(), async (req, res) => {
+    try {
+      // The access code is hardcoded for simplicity - in a real app, 
+      // this would be stored securely in an environment variable or database
+      const ADMIN_ACCESS_CODE = "PB2025batana";
+      
+      const { accessCode } = req.body;
+      
+      if (!accessCode) {
+        return res.status(400).json({ message: "Access code is required" });
+      }
+      
+      if (accessCode !== ADMIN_ACCESS_CODE) {
+        return res.status(401).json({ message: "Invalid access code" });
+      }
+      
+      res.status(200).json({ authenticated: true });
+    } catch (error) {
+      console.error("Error verifying admin access:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.post("/api/notifications/sms-settings", express.json(), async (req, res) => {
     try {
       const { phoneNumber, carrier } = req.body;

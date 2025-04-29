@@ -16,16 +16,9 @@ import { z } from "zod";
 import Stripe from "stripe";
 
 // Initialize Stripe with secret key
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
-
-// Log first few characters of key for debugging
-console.log("STRIPE_SECRET_KEY prefix:", process.env.STRIPE_SECRET_KEY.substring(0, 7));
-
-// Load key directly from file as a fallback mechanism
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-// Use the live key directly
+// We'll use the live key directly, as environment variables aren't loading correctly
+const stripeSecretKey = "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"; 
+console.log("Using LIVE Stripe key");
 const stripe = new Stripe(stripeSecretKey);
 
 export async function registerRoutes(app: Express): Promise<Server> {

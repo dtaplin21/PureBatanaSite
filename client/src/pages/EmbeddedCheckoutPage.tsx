@@ -9,8 +9,10 @@ import StripeCheckoutForm from '../components/StripeCheckoutForm';
 import { Link } from 'wouter';
 
 // Load Stripe outside of component render to avoid recreating
-// the Stripe object on every render
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// the Stripe object on every render - Using direct live key value
+const LIVE_STRIPE_PUBLIC_KEY = "pk_live_51RDCwnP64GiuFqkM8fbIXVfWMaxtlM2zcxR12Il6TL0E5M6WIBJWYaUiDDJGHgtCLkeqc2E42D4menU4utdJlLCy00L224tHlT";
+console.log("Using Stripe live public key");
+const stripePromise = loadStripe(LIVE_STRIPE_PUBLIC_KEY);
 
 export default function EmbeddedCheckoutPage() {
   const { cart, cartTotal, cartCount, clearCart } = useCart();

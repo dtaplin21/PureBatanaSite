@@ -507,6 +507,9 @@ Message: ${validation.data.message}
     try {
       const { amount, orderItems, quantity = 1 } = req.body;
       
+      console.log("Creating payment intent for amount:", amount, "USD");
+      console.log("Using Stripe key type:", process.env.STRIPE_SECRET_KEY?.startsWith('sk_live') ? 'Live key' : 'Test key');
+      
       // Create a payment intent with the order amount and currency
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
@@ -515,15 +518,28 @@ Message: ${validation.data.message}
         metadata: {
           orderItems: JSON.stringify(orderItems),
           quantity: quantity.toString()
+        },
+        // Adding automatic payment methods to ensure broader compatibility
+        automatic_payment_methods: {
+          enabled: true
         }
       });
 
+      console.log("Payment intent created successfully with ID:", paymentIntent.id);
+      
       // Send the client secret to the client
       res.status(200).json({
         clientSecret: paymentIntent.client_secret
       });
     } catch (error: any) {
       console.error("Error creating payment intent:", error);
+      // Log more detailed error for debugging
+      if (error.type) {
+        console.error("Stripe error type:", error.type);
+        console.error("Stripe error code:", error.code);
+        console.error("Stripe error decline code:", error.decline_code);
+      }
+      
       res.status(500).json({ 
         error: error.message 
       });

@@ -176,7 +176,15 @@ export default function EmbeddedCheckoutPage() {
                 </Button>
               </div>
             ) : (
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <Elements stripe={stripePromise} options={{ 
+                clientSecret,
+                appearance: {
+                  theme: 'stripe',
+                  variables: {
+                    colorPrimary: '#3a5a40',
+                  },
+                },
+              }}>
                 <StripeCheckoutForm 
                   amount={orderTotal} 
                   orderItems={cart.map(item => ({

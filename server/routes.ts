@@ -747,16 +747,21 @@ Message: ${validation.data.message}
 
   app.post("/api/notifications/sms-settings", express.json(), async (req, res) => {
     try {
-      const { phoneNumber, carrier } = req.body;
+      const { phoneNumber } = req.body;
       
-      if (!phoneNumber || !carrier) {
+      if (!phoneNumber) {
         return res.status(400).json({ 
-          message: "Phone number and carrier are required" 
+          message: "Phone number is required" 
         });
       }
       
-      const { updateSmsSettings } = await import('./notification');
-      updateSmsSettings(phoneNumber, carrier);
+      // Format the phone number for Twilio
+      const formattedNumber = `+1${phoneNumber.replace(/\D/g, '')}`;
+      
+      // Store the phone number in environment variable for later use
+      process.env.RECIPIENT_PHONE_NUMBER = formattedNumber;
+      
+      console.log(`Updated SMS recipient phone number to: ${formattedNumber}`);
       
       res.json({ 
         success: true, 

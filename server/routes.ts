@@ -627,16 +627,16 @@ Message: ${validation.data.message}
           // Send order notification to admin (your email)
           await sendAdminOrderNotification(orderData);
           
-          // Send SMS notification via email-to-SMS gateway
+          // Send SMS notification via Twilio
           try {
-            const { sendSaleNotificationSms } = await import('./notification');
-            await sendSaleNotificationSms(
+            const { sendNewOrderSms } = await import('./sms');
+            await sendNewOrderSms(
               orderNumber,
               customerName,
               total
             );
           } catch (smsError) {
-            console.error('Error sending SMS notification:', smsError);
+            console.error('Error sending Twilio SMS notification:', smsError);
           }
           
           // If we have order data in our system, update it
@@ -666,49 +666,38 @@ Message: ${validation.data.message}
     }
   });
 
-  // API - Test SMS notifications
+  // API - Test SMS notifications using Twilio
   app.post("/api/notifications/test-sms", express.json(), async (req, res) => {
     try {
-      // Check if SendGrid API key is set
-      if (!process.env.SENDGRID_API_KEY) {
+      // Check if Twilio credentials are set
+      if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
         return res.status(500).json({
           success: false,
-          message: "SendGrid API key is not configured. SMS notifications cannot be sent."
+          message: "Twilio credentials are not configured. SMS notifications cannot be sent."
         });
       }
       
-      // Check if SendGrid verified sender email is set
-      if (!process.env.SENDGRID_FROM_EMAIL) {
-        return res.status(500).json({
-          success: false,
-          message: "SendGrid verified sender email is not configured. Please set SENDGRID_FROM_EMAIL environment variable."
-        });
-      }
+      // Import the Twilio SMS function
+      const { sendNewOrderSms } = await import('./sms');
       
-      console.log("Testing SMS with SENDGRID_FROM_EMAIL:", process.env.SENDGRID_FROM_EMAIL);
+      // Get the phone number from the request body or use the default
+      const { phoneNumber } = req.body;
+      const recipientNumber = phoneNumber ? `+1${phoneNumber.replace(/\D/g, '')}` : undefined;
       
-      const { sendSaleNotificationSms } = await import('./notification');
-      
-      // Allow testing with different carriers and phone numbers
-      const { phoneNumber, carrier } = req.body;
-      
-      // Temporarily update SMS settings if provided
-      if (phoneNumber && carrier) {
-        const { updateSmsSettings } = await import('./notification');
-        updateSmsSettings(phoneNumber, carrier);
-      }
+      console.log(`Sending test SMS to ${recipientNumber || 'default number'} using Twilio`);
       
       // Send a test SMS
-      const success = await sendSaleNotificationSms(
+      const success = await sendNewOrderSms(
         "TEST123", 
         "Test Customer", 
-        29.99
+        29.99,
+        recipientNumber
       );
       
       if (success) {
         res.json({ 
           success: true, 
-          message: "Test SMS notification sent successfully!" 
+          message: "Test SMS notification sent successfully via Twilio!" 
         });
       } else {
         res.status(500).json({ 
@@ -721,12 +710,7 @@ Message: ${validation.data.message}
       
       // Include more detailed error information
       let errorMessage = "Error sending test SMS notification: ";
-      
-      if (error.response && error.response.body && error.response.body.errors) {
-        errorMessage += JSON.stringify(error.response.body.errors);
-      } else {
-        errorMessage += (error.message || 'Unknown error');
-      }
+      errorMessage += (error.message || 'Unknown error');
       
       res.status(500).json({ 
         success: false, 

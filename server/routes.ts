@@ -680,9 +680,19 @@ Message: ${validation.data.message}
       // Import the Twilio SMS function
       const { sendNewOrderSms } = await import('./sms');
       
-      // Get the phone number from the request body or use the default
+      // Get the phone number from the admin interface or use the default
       const { phoneNumber } = req.body;
-      const recipientNumber = phoneNumber ? `+1${phoneNumber.replace(/\D/g, '')}` : undefined;
+      
+      // Format the phone number properly for Twilio
+      let recipientNumber: string | undefined;
+      if (phoneNumber) {
+        // Make sure it starts with +1 for US numbers
+        recipientNumber = phoneNumber.startsWith('+') 
+          ? phoneNumber 
+          : (phoneNumber.startsWith('1') 
+            ? `+${phoneNumber}` 
+            : `+1${phoneNumber.replace(/\D/g, '')}`);
+      }
       
       console.log(`Sending test SMS to ${recipientNumber || 'default number'} using Twilio`);
       
@@ -755,8 +765,12 @@ Message: ${validation.data.message}
         });
       }
       
-      // Format the phone number for Twilio
-      const formattedNumber = `+1${phoneNumber.replace(/\D/g, '')}`;
+      // Format the phone number properly for Twilio
+      const formattedNumber = phoneNumber.startsWith('+') 
+        ? phoneNumber 
+        : (phoneNumber.startsWith('1') 
+          ? `+${phoneNumber}` 
+          : `+1${phoneNumber.replace(/\D/g, '')}`);
       
       // Store the phone number in environment variable for later use
       process.env.RECIPIENT_PHONE_NUMBER = formattedNumber;

@@ -20,7 +20,7 @@ export default function CheckoutSuccessPage() {
   const [customerEmail, setCustomerEmail] = useState<string>("");
   
   useEffect(() => {
-    // Clear the cart after a successful checkout
+    // Clear the cart once on component mount
     clearCart();
     
     // Get the client secret from URL parameters
@@ -28,13 +28,17 @@ export default function CheckoutSuccessPage() {
       'payment_intent_client_secret'
     );
 
+    // Flag to track if component is mounted
+    let isMounted = true;
+
     if (clientSecret) {
-      // Use the promise version instead of hook
+      // Load Stripe and retrieve payment intent
       stripePromise.then(stripe => {
-        if (!stripe) return;
+        if (!stripe || !isMounted) return;
         
         stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
-          if (paymentIntent) {
+          // Only update state if component is still mounted
+          if (paymentIntent && isMounted) {
             // Store payment status
             setPaymentStatus(paymentIntent.status || "succeeded");
             
@@ -67,7 +71,12 @@ export default function CheckoutSuccessPage() {
         });
       });
     }
-  }, [location, clearCart]);
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - run only once on mount
 
   // Render based on payment status
   let statusIcon;

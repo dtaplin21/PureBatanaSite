@@ -671,6 +671,15 @@ Message: ${validation.data.message}
     try {
       const { sendSaleNotificationSms } = await import('./notification');
       
+      // Allow testing with different carriers and phone numbers
+      const { phoneNumber, carrier } = req.body;
+      
+      // Temporarily update SMS settings if provided
+      if (phoneNumber && carrier) {
+        const { updateSmsSettings } = await import('./notification');
+        updateSmsSettings(phoneNumber, carrier);
+      }
+      
       // Send a test SMS
       const success = await sendSaleNotificationSms(
         "TEST123", 
@@ -689,11 +698,12 @@ Message: ${validation.data.message}
           message: "Failed to send test SMS notification" 
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending test SMS notification:', error);
       res.status(500).json({ 
         success: false, 
-        message: "Error sending test SMS notification" 
+        message: "Error sending test SMS notification: " + (error.message || 'Unknown error'),
+        details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
       });
     }
   });

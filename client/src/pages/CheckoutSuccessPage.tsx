@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
-import { useStripe } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { useCart } from '../context/CartContext';
 import { Button } from "@/components/ui/button";
 import { Link } from 'wouter';
@@ -8,8 +8,11 @@ import { Card, CardHeader, CardContent, CardDescription, CardTitle, CardFooter }
 import { CheckCircle, Clock, AlertTriangle, ArrowRight, Mail, Truck, Package } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
+// Load Stripe outside of component render
+const LIVE_STRIPE_PUBLIC_KEY = "pk_live_51RDCwnP64GiuFqkM8fbIXVfWMaxtlM2zcxR12Il6TL0E5M6WIBJWYaUiDDJGHgtCLkeqc2E42D4menU4utdJlLCy00L224tHlT";
+const stripePromise = loadStripe(LIVE_STRIPE_PUBLIC_KEY);
+
 export default function CheckoutSuccessPage() {
-  const stripe = useStripe();
   const [location] = useLocation();
   const { clearCart } = useCart();
   const [paymentStatus, setPaymentStatus] = useState<string>("succeeded");
@@ -20,50 +23,51 @@ export default function CheckoutSuccessPage() {
     // Clear the cart after a successful checkout
     clearCart();
     
-    // Check the status of the payment if coming from the embedded checkout
-    if (!stripe) {
-      return;
-    }
-
+    // Get the client secret from URL parameters
     const clientSecret = new URLSearchParams(window.location.search).get(
       'payment_intent_client_secret'
     );
 
     if (clientSecret) {
-      stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
-        if (paymentIntent) {
-          // Store payment status
-          setPaymentStatus(paymentIntent.status || "succeeded");
-          
-          // Generate an order number based on the payment intent ID
-          if (paymentIntent.id) {
-            setOrderNumber(`PB${paymentIntent.id.substring(3, 9).toUpperCase()}`);
+      // Use the promise version instead of hook
+      stripePromise.then(stripe => {
+        if (!stripe) return;
+        
+        stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
+          if (paymentIntent) {
+            // Store payment status
+            setPaymentStatus(paymentIntent.status || "succeeded");
+            
+            // Generate an order number based on the payment intent ID
+            if (paymentIntent.id) {
+              setOrderNumber(`PB${paymentIntent.id.substring(3, 9).toUpperCase()}`);
+            }
+            
+            // Get customer email if available
+            if (paymentIntent.receipt_email) {
+              setCustomerEmail(paymentIntent.receipt_email);
+            }
+            
+            // Log payment status
+            switch (paymentIntent.status) {
+              case "succeeded":
+                console.log('Payment succeeded!');
+                break;
+              case "processing":
+                console.log('Your payment is processing.');
+                break;
+              case "requires_payment_method":
+                console.log('Your payment was not successful, please try again.');
+                break;
+              default:
+                console.log('Something went wrong.');
+                break;
+            }
           }
-          
-          // Get customer email if available
-          if (paymentIntent.receipt_email) {
-            setCustomerEmail(paymentIntent.receipt_email);
-          }
-          
-          // Log payment status
-          switch (paymentIntent.status) {
-            case "succeeded":
-              console.log('Payment succeeded!');
-              break;
-            case "processing":
-              console.log('Your payment is processing.');
-              break;
-            case "requires_payment_method":
-              console.log('Your payment was not successful, please try again.');
-              break;
-            default:
-              console.log('Something went wrong.');
-              break;
-          }
-        }
+        });
       });
     }
-  }, [stripe, location, clearCart]);
+  }, [location, clearCart]);
 
   // Render based on payment status
   let statusIcon;

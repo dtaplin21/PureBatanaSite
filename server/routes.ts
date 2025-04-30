@@ -669,6 +669,24 @@ Message: ${validation.data.message}
   // API - Test SMS notifications
   app.post("/api/notifications/test-sms", express.json(), async (req, res) => {
     try {
+      // Check if SendGrid API key is set
+      if (!process.env.SENDGRID_API_KEY) {
+        return res.status(500).json({
+          success: false,
+          message: "SendGrid API key is not configured. SMS notifications cannot be sent."
+        });
+      }
+      
+      // Check if SendGrid verified sender email is set
+      if (!process.env.SENDGRID_FROM_EMAIL) {
+        return res.status(500).json({
+          success: false,
+          message: "SendGrid verified sender email is not configured. Please set SENDGRID_FROM_EMAIL environment variable."
+        });
+      }
+      
+      console.log("Testing SMS with SENDGRID_FROM_EMAIL:", process.env.SENDGRID_FROM_EMAIL);
+      
       const { sendSaleNotificationSms } = await import('./notification');
       
       // Allow testing with different carriers and phone numbers
@@ -695,15 +713,25 @@ Message: ${validation.data.message}
       } else {
         res.status(500).json({ 
           success: false, 
-          message: "Failed to send test SMS notification" 
+          message: "Failed to send test SMS notification. Check server logs for details." 
         });
       }
     } catch (error: any) {
       console.error('Error sending test SMS notification:', error);
+      
+      // Include more detailed error information
+      let errorMessage = "Error sending test SMS notification: ";
+      
+      if (error.response && error.response.body && error.response.body.errors) {
+        errorMessage += JSON.stringify(error.response.body.errors);
+      } else {
+        errorMessage += (error.message || 'Unknown error');
+      }
+      
       res.status(500).json({ 
         success: false, 
-        message: "Error sending test SMS notification: " + (error.message || 'Unknown error'),
-        details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
+        message: errorMessage,
+        details: error.toString()
       });
     }
   });

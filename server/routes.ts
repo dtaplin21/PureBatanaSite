@@ -397,11 +397,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/reviews", express.json(), async (req, res) => {
     try {
-      // Generate a random user ID for anonymous reviews to avoid conflicts
+      // For now, allow anonymous reviews by using a default user ID
       // In a real app, you'd check authentication first
       const reviewData = {
         ...req.body,
-        userId: req.body.userId || Math.floor(Math.random() * 1000000) + 1000, // Random user ID for anonymous reviews
+        userId: req.body.userId || 1, // Use first user as default for anonymous reviews
         customerName: req.body.customerName || null
       };
       

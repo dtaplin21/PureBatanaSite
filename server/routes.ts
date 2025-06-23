@@ -419,6 +419,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/reviews/:id", async (req, res) => {
+    try {
+      const reviewId = parseInt(req.params.id);
+      
+      // For now, allow anyone to delete any review
+      // In a real app, you'd check if the user owns the review
+      const deletedReview = await storage.deleteReview(reviewId);
+      
+      if (deletedReview) {
+        res.status(200).json({ message: "Review deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Review not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      res.status(500).json({ message: "Error deleting review" });
+    }
+  });
+
   // Newsletter
   app.post("/api/newsletter/subscribe", express.json(), async (req, res) => {
     try {

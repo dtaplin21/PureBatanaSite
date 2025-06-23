@@ -422,9 +422,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/reviews/:id", async (req, res) => {
     try {
       const reviewId = parseInt(req.params.id);
+      const userIdToCheck = req.body.userId || 1; // Default user ID for anonymous reviews
       
-      // For now, allow anyone to delete any review
-      // In a real app, you'd check if the user owns the review
+      // First, get the review to check ownership
+      const existingReview = await storage.getReviewById(reviewId);
+      if (!existingReview) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      
+      // Check if the user owns this review
+      if (existingReview.userId !== userIdToCheck) {
+        return res.status(403).json({ message: "You can only delete your own reviews" });
+      }
+      
       const deletedReview = await storage.deleteReview(reviewId);
       
       if (deletedReview) {

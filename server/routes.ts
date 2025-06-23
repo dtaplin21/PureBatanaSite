@@ -397,14 +397,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/reviews", express.json(), async (req, res) => {
     try {
-      const validation = insertReviewSchema.safeParse(req.body);
+      // For now, allow anonymous reviews by using a default user ID
+      // In a real app, you'd check authentication first
+      const reviewData = {
+        ...req.body,
+        userId: req.body.userId || 1 // Use first user as default for anonymous reviews
+      };
+      
+      const validation = insertReviewSchema.safeParse(reviewData);
       if (!validation.success) {
+        console.error("Review validation failed:", validation.error);
         return res.status(400).json({ message: "Invalid review data", errors: validation.error });
       }
       
       const newReview = await storage.createReview(validation.data);
       res.status(201).json(newReview);
     } catch (error) {
+      console.error("Error creating review:", error);
       res.status(500).json({ message: "Error creating review" });
     }
   });

@@ -401,7 +401,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In a real app, you'd check authentication first
       const reviewData = {
         ...req.body,
-        userId: req.body.userId || 1 // Use first user as default for anonymous reviews
+        userId: req.body.userId || 1, // Use first user as default for anonymous reviews
+        customerName: req.body.customerName || null
       };
       
       const validation = insertReviewSchema.safeParse(reviewData);
